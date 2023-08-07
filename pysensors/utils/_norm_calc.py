@@ -123,11 +123,61 @@ def predetermined(lin_idx, dlens, piv, j, n_const_sensors, **kwargs):
     dlens[didx] = 0
     return dlens
 
+def multiple_constraint_regions(lin_idx, dlens, piv, j, n_const_sensors, **kwargs):
+    """
+    Function for mapping multiple constrained sensor locations with the QR procedure.
+
+    Parameters
+    ----------
+    lin_idx: np.ndarray, shape [No. of constrained locations], array which contains
+        the constrained locations of the grid in terms of column indices of basis_matrix.
+    dlens: np.ndarray, shape [Variable based on j], array which contains the norm of columns of basis matrix.
+    piv: np.ndarray, shape [n_features], ranked list of sensor locations.
+    n_const_sensors: int, number of sensors to be placed in the constrained area.
+    j: int, iterative variable in the QR algorithm.
+
+    Returns
+    -------
+    dlens : np.darray, shape [Variable based on j] with constraints mapped into it.
+    """
+    if 'all_sensors' in kwargs.keys():
+        all_sensors = kwargs['all_sensors']
+    else:
+        all_sensors = []
+    if 'n_sensors' in kwargs.keys():
+        n_sensors = kwargs['n_sensors']
+    else:
+        n_sensors = len(all_sensors)
+    n_constraint_regions = len(n_const_sensors) ## Number of constraint regions
+    count_const_sensors = []
+    sens_positions = []
+    deficit = []
+    constraint_type = []
+    for i in range(n_constraint_regions):
+        count = np.count_nonzero(np.isin(all_sensors[:n_sensors],lin_idx[i],invert=False))
+        defi = n_const_sensors[i][0] - count
+        sens_loc = np.where(np.isin(all_sensors[:n_sensors],lin_idx[i],invert=False))
+        count_const_sensors.append(count)  ## Number of sensors in each constrained region in the original unconstrained top_sensors 
+        deficit.append(defi)
+        sens_positions.append(sens_loc)
+        constraint_type.append(n_const_sensors[i][1])  ## Type of constraint implemented in each region (max_n, exact_n, etc.)
+    print(constraint_type)
+    n_exact = constraint_type.count('exact_n')
+    print(n_exact)
+    
+    for i in range(n_constraint_regions):
+        if constraint_type[i] == 'max_n':
+            dlens = max_n(lin_idx[i], dlens, piv, j, n_const_sensors[i][0], **kwargs)
+        if constraint_type[i] == 'exact_n':
+            dlens = exact_n(lin_idx[i], dlens, piv, j, n_const_sensors[i][0], **kwargs)
+    return dlens
+                
 __norm_calc_type = {}
 __norm_calc_type[''] = unconstrained
 __norm_calc_type['exact_n'] = exact_n
 __norm_calc_type['max_n'] = max_n
 __norm_calc_type['predetermined'] = predetermined
+__norm_calc_type['multiple_constraint_regions'] = multiple_constraint_regions
 
 def returnInstance(cls, name):
   """
