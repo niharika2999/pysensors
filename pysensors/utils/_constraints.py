@@ -675,8 +675,9 @@ class Ellipse(BaseConstraint):
         y : float,
             y coordinate of point on the grid being evaluated to check whether it lies inside or outside the constrained region
         '''
-        u = (x - self.center_x)/np.cos(self.angle*np.pi/180)
-        v = (y - self.center_y)/np.sin(self.angle*np.pi/180)
+        angleInRadians = self.angle * np.pi/180
+        u = (x - self.center_x) * np.cos(angleInRadians) + (y - self.center_y) * np.sin(angleInRadians)
+        v = -(x - self.center_x) * np.sin(angleInRadians) + (y - self.center_y) * np.sin(angleInRadians)
         if self.loc == 'in':
             return u**2/self.half_major_axis**2 + v**2/self.half_minor_axis**2 - 1
         elif self.loc == 'out':
@@ -733,25 +734,7 @@ class Polygon(BaseConstraint): ### Based on previous discussion we are re-thinki
                     inside = not inside
 
         return not inside
-        # for i in range(n + 1):
-        #     x2, y2 = polygon[i % n]
-        #     if y > min(y1, y2) and y <= max(y1, y2) and x <= max(x1, x2):
-        #         if x1 != x2:
-        #             x_intersection = (y - y1) * (x2 - x1) / (y2 - y1) + x1
-        #             if x1 == x2 or x <= x_intersection:
-        #                 inside = not inside
-        #     x1, y1 = x2, y2
-
-        # return inside
-
-# # Example usage:
-# polygon = [(0, 0), (0, 4), (4, 4), (4, 0)]
-# point = (2, 2)
-# result = point_in_polygon(point, polygon)
-# print(result)  # True (point is inside the polygon)
-
-        
-    
+            
 class UserDefinedConstraints(BaseConstraint):
     '''
     General class for dealing with any form of user defined constraints. 
