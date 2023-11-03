@@ -193,7 +193,7 @@ class BaseConstraint(object):
         """
         assert (len(senID)==len(g))
         idx_constrained = senID[~g].tolist()
-        rank = np.where(np.isin(senID,idx_constrained))[0].tolist() # ==False
+        rank = np.where(np.isin(idx_constrained,senID))[0].tolist() # ==False
         return idx_constrained, rank
     
     def get_constraint_indices(self,all_sensors,info):
@@ -617,7 +617,7 @@ class Ellipse(BaseConstraint):
     General class for dealing with elliptical user defined constraints.
     Plotting, computing constraints functionalities included. 
     '''
-    def __init__(self,center_x,center_y,half_major_axis, half_minor_axis, angle = 0.0, loc = 'in', **kwgs):
+    def __init__(self,center_x,center_y,half_horizontal_axis, half_vertical_axis, angle = 0.0, loc = 'in', **kwgs):
         super().__init__(**kwgs)
         '''
         Attributes
@@ -626,10 +626,10 @@ class Ellipse(BaseConstraint):
             x-coordinate of the center of circle
         center_y : float,
             y-coordinate of the center of circle
-        half_major_axis : float,
-            half the length of the major axis
-        half_minor_axis : float,
-            half the length of the minor axis
+        half_horizontal_axis : float,
+            half the length of the horizontal axis in the standard (non rotated) form
+        half_vertical_axis : float,
+            half the length of the vertical axis in the standard (non rotated) form
         angle : float,
             angle of the orientation of the ellipse in degrees
         loc : string- 'in'/'out',
@@ -648,8 +648,8 @@ class Ellipse(BaseConstraint):
         '''
         self.center_x = center_x
         self.center_y = center_y
-        self.half_major_axis = half_major_axis
-        self.half_minor_axis = half_minor_axis
+        self.half_horizontal_axis = half_horizontal_axis
+        self.half_vertical_axis = half_vertical_axis
         self.loc = loc
         self.angle = angle
         
@@ -660,7 +660,7 @@ class Ellipse(BaseConstraint):
         ----------
         ax : axis on which the constraint ellipse should be plotted
         '''
-        c = patches.Ellipse((self.center_x, self.center_y), 2*self.half_major_axis, 2*self.half_minor_axis, angle = self.angle, fill = False, color = 'r', lw = 2)
+        c = patches.Ellipse((self.center_x, self.center_y), 2 * self.half_horizontal_axis, 2 * self.half_vertical_axis, angle = self.angle, fill = False, color = 'r', lw = 2)
         ax.add_patch(c)
         ax.autoscale_view()
         
@@ -677,11 +677,11 @@ class Ellipse(BaseConstraint):
         '''
         angleInRadians = self.angle * np.pi/180
         u = (x - self.center_x) * np.cos(angleInRadians) + (y - self.center_y) * np.sin(angleInRadians)
-        v = -(x - self.center_x) * np.sin(angleInRadians) + (y - self.center_y) * np.sin(angleInRadians)
+        v = -(x - self.center_x) * np.sin(angleInRadians) + (y - self.center_y) * np.cos(angleInRadians)
         if self.loc == 'in':
-            return u**2/self.half_major_axis**2 + v**2/self.half_minor_axis**2 - 1
+            return u**2/self.half_horizontal_axis**2 + v**2/self.half_vertical_axis**2 - 1
         elif self.loc == 'out':
-            return 1 - (u**2/self.half_major_axis**2 + v**2/self.half_minor_axis**2)
+            return 1 - (u**2/self.half_horizontal_axis**2 + v**2/self.half_vertical_axis**2)
 class Polygon(BaseConstraint): ### Based on previous discussion we are re-thinking this part (Fill up with Mohammad's implementation of the Polygon)
     '''
     General class for dealing with polygonal user defined constraints.
