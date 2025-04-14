@@ -12,7 +12,6 @@ from pysensors.basis import SVD
 from pysensors.classification import SSPOC
 from pytest_lazyfixture import lazy_fixture
 
-
 SEED = 15
 
 
